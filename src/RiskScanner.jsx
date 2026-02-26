@@ -4,7 +4,7 @@ import './RiskScanner.css';
 const RISKY_KEYWORDS = [
     "call", "phone number", "WhatsApp", "Telegram", "email",
     "payment", "@", "PayPal", "Payoneer", "bank transfer",
-    "direct payment", "gmail", "pay outside", "contact me directly", "Skype"
+    "direct payment", "gmail", "pay", "pay outside", "contact me directly", "Skype"
 ].sort((a, b) => b.length - a.length);
 
 const RiskScanner = () => {
