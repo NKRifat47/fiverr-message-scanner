@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import './RiskScanner.css';
 
 const RISKY_KEYWORDS = [
-    "call", "phone number", "WhatsApp", "Telegram", "email",
+    "call", "phone number", "WhatsApp", "number", "Telegram", "email",
     "payment", "@", "PayPal", "Payoneer", "bank transfer",
     "direct payment", "payments", "gmail", "pay", "pay outside", "contact me directly", "Skype"
 ].sort((a, b) => b.length - a.length);
@@ -83,7 +83,8 @@ const RiskScanner = () => {
 
         RISKY_KEYWORDS.forEach(word => {
             const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regexSource = /^[a-zA-Z0-9]/.test(word) ? `\\b${escapedWord}\\b` : escapedWord;
+            // Remove trailing \b to allow matching plurals (e.g., "gmails" matches "gmail")
+            const regexSource = /^[a-zA-Z0-9]/.test(word) ? `\\b${escapedWord}` : escapedWord;
             const regex = new RegExp(regexSource, 'gi');
 
             const matches = textValue.match(regex);
