@@ -21,7 +21,7 @@ const RiskScanner = () => {
             .replace(/'/g, "&#039;");
     };
 
-    const { processedHtml, riskCount, wordCount } = useMemo(() => {
+    const { processedHtml, riskCount, wordCount, charCount } = useMemo(() => {
         let highlighted = escapeHtml(text);
         let foundCount = 0;
 
@@ -42,8 +42,9 @@ const RiskScanner = () => {
             + (text.endsWith('\n') ? '\n' : '');
 
         const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        const chars = text.length;
 
-        return { processedHtml: html, riskCount: foundCount, wordCount: words };
+        return { processedHtml: html, riskCount: foundCount, wordCount: words, charCount: chars };
     }, [text]);
 
     const handleScroll = () => {
@@ -90,6 +91,9 @@ const RiskScanner = () => {
                     </div>
                     <div className={`word-badge ${wordCount > 2500 ? 'warning' : ''}`}>
                         {wordCount.toLocaleString()} Words
+                    </div>
+                    <div className="word-badge">
+                        {charCount.toLocaleString()} Characters
                     </div>
                 </div>
                 <button className="btn-clear" onClick={handleClear}>Clear All</button>
