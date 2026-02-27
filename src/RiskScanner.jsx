@@ -1,16 +1,64 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import './RiskScanner.css';
 
 const RISKY_KEYWORDS = [
     "call", "phone number", "WhatsApp", "Telegram", "email",
     "payment", "@", "PayPal", "Payoneer", "bank transfer",
-    "direct payment", "gmail", "pay", "pay outside", "contact me directly", "Skype"
+    "direct payment", "payments", "gmail", "pay", "pay outside", "contact me directly", "Skype"
 ].sort((a, b) => b.length - a.length);
 
 const RiskScanner = () => {
-    const [text, setText] = useState('');
-    const textareaRef = useRef(null);
-    const backdropRef = useRef(null);
+    const editorRef = useRef(null);
+    const [wordCount, setWordCount] = useState(0);
+    const [charCount, setCharCount] = useState(0);
+    const [riskCount, setRiskCount] = useState(0);
+
+    // Function to get caret position in characters
+    const getCaretCharacterOffsetWithin = (element) => {
+        let caretOffset = 0;
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(element);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            caretOffset = preCaretRange.toString().length;
+        }
+        return caretOffset;
+    };
+
+    // Function to set caret position from character offset
+    const setCaretPosition = (element, offset) => {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        let currentOffset = 0;
+        let found = false;
+
+        const traverse = (node) => {
+            if (found) return;
+            if (node.nodeType === 3) { // Text node
+                const nextOffset = currentOffset + node.length;
+                if (offset <= nextOffset) {
+                    range.setStart(node, offset - currentOffset);
+                    range.setEnd(node, offset - currentOffset);
+                    found = true;
+                }
+                currentOffset = nextOffset;
+            } else {
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    traverse(node.childNodes[i]);
+                }
+            }
+        };
+
+        traverse(element);
+        if (!found) {
+            range.setStart(element, element.childNodes.length);
+            range.setEnd(element, element.childNodes.length);
+        }
+        selection.removeAllRanges();
+        selection.addRange(range);
+    };
 
     const escapeHtml = (unsafe) => {
         return unsafe
@@ -21,8 +69,16 @@ const RiskScanner = () => {
             .replace(/'/g, "&#039;");
     };
 
-    const { processedHtml, riskCount, wordCount, charCount } = useMemo(() => {
-        let highlighted = escapeHtml(text);
+    const handleInput = () => {
+        const el = editorRef.current;
+        const selection = window.getSelection();
+
+        // Save caret position
+        const offset = getCaretCharacterOffsetWithin(el);
+        const textValue = el.innerText || "";
+
+        // Process Highlights
+        let highlighted = escapeHtml(textValue);
         let foundCount = 0;
 
         RISKY_KEYWORDS.forEach(word => {
@@ -30,33 +86,45 @@ const RiskScanner = () => {
             const regexSource = /^[a-zA-Z0-9]/.test(word) ? `\\b${escapedWord}\\b` : escapedWord;
             const regex = new RegExp(regexSource, 'gi');
 
-            const matches = text.match(regex);
+            const matches = textValue.match(regex);
             if (matches) foundCount += matches.length;
 
             highlighted = highlighted.replace(regex, '##OPEN##$&##CLOSE##');
         });
 
-        const html = highlighted
+        const finalHtml = highlighted
             .split('##OPEN##').join('<span class="highlight">')
-            .split('##CLOSE##').join('</span>')
-            + (text.endsWith('\n') ? '\n' : '');
+            .split('##CLOSE##').join('</span>');
 
-        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-        const chars = text.length;
-
-        return { processedHtml: html, riskCount: foundCount, wordCount: words, charCount: chars };
-    }, [text]);
-
-    const handleScroll = () => {
-        if (textareaRef.current && backdropRef.current) {
-            backdropRef.current.scrollTop = textareaRef.current.scrollTop;
+        // Update content if different (to avoid unnecessary re-renders)
+        if (el.innerHTML !== finalHtml) {
+            el.innerHTML = finalHtml;
+            // Restore caret
+            setCaretPosition(el, offset);
         }
+
+        // Update stats
+        setRiskCount(foundCount);
+        setCharCount(textValue.length);
+        setWordCount(textValue.trim() ? textValue.trim().split(/\s+/).length : 0);
     };
 
     const handleClear = () => {
-        setText('');
-        if (textareaRef.current) textareaRef.current.focus();
+        if (editorRef.current) {
+            editorRef.current.innerHTML = "";
+            setRiskCount(0);
+            setCharCount(0);
+            setWordCount(0);
+            editorRef.current.focus();
+        }
     };
+
+    // Initial focus and setup
+    useEffect(() => {
+        if (editorRef.current) {
+            editorRef.current.focus();
+        }
+    }, []);
 
     return (
         <div className="risk-scanner-container">
@@ -67,20 +135,14 @@ const RiskScanner = () => {
                 </p>
             </header>
 
-            <div className="editor-container">
+            <div className="editor-wrapper">
                 <div
-                    ref={backdropRef}
-                    className="backdrop"
-                    dangerouslySetInnerHTML={{ __html: processedHtml }}
-                />
-                <textarea
-                    ref={textareaRef}
-                    className="textarea"
-                    spellcheck="false"
+                    ref={editorRef}
+                    className="editable-area"
+                    contentEditable="true"
+                    spellCheck="false"
+                    onInput={handleInput}
                     placeholder="Paste or type your message here..."
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onScroll={handleScroll}
                 />
             </div>
 

@@ -37,53 +37,35 @@
 }
 
 /* Editor Styles */
-.editor-container {
-    position: relative;
-    width: 100%;
-    height: 400px;
-    margin-bottom: 15px;
-    border: 2px solid #e4e5e7;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #fff;
-    transition: border-color 0.2s;
+.editor-wrapper {
+    margin-bottom: 25px;
 }
 
-.editor-container:focus-within {
+.editable-area {
+    width: 100%;
+    height: 400px;
+    padding: 20px;
+    font-size: 18px;
+    line-height: 1.6;
+    border: 2px solid #e4e5e7;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+    overflow-y: auto;
+    outline: none;
+    transition: all 0.2s;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.editable-area:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 4px rgba(29, 191, 115, 0.1);
 }
 
-.backdrop,
-.textarea {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    padding: 20px;
-    font-size: 18px;
-    line-height: 1.6;
-    font-family: inherit;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-y: auto;
-    border: none;
-    outline: none;
-    background: transparent;
-}
-
-.textarea {
-    z-index: 2;
-    color: transparent;
-    caret-color: var(--text);
-    resize: none;
-}
-
-.backdrop {
-    z-index: 1;
-    color: var(--text);
-    pointer-events: none;
+.editable-area[placeholder]:empty:before {
+    content: attr(placeholder);
+    color: #999;
 }
 
 .highlight {
@@ -167,6 +149,16 @@
     }
 }
 
-.backdrop::-webkit-scrollbar {
-    display: none;
+/* Scrollbar styling */
+.editable-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.editable-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.editable-area::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
 }
