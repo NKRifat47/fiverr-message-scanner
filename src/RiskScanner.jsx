@@ -4,7 +4,8 @@ import './RiskScanner.css';
 const RISKY_KEYWORDS = [
     "call", "phone number", "WhatsApp", "number", "Telegram", "email",
     "payment", "@", "PayPal", "Payoneer", "bank transfer",
-    "direct payment", "payments", "gmail", "pay", "pay outside", "contact me directly", "Skype"
+    "direct payment", "payments", "gmail", "pay", "pay outside", "contact me directly", "Skype",
+    "facebook", "messenger", "Instagram", "linkedin", "marketplace", "bill", "account", "money", "meetings", "TikTok"
 ].sort((a, b) => b.length - a.length);
 
 const RiskScanner = () => {
@@ -77,21 +78,22 @@ const RiskScanner = () => {
         const offset = getCaretCharacterOffsetWithin(el);
         const textValue = el.innerText || "";
 
-        // Process Highlights
+        // Create a single regex for all keywords to avoid overlapping/double counting
+        // Keywords are already sorted by length (descending) so longer ones match first
+        const pattern = RISKY_KEYWORDS.map(word => {
+            const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return /^[a-zA-Z0-9]/.test(word) ? `\\b${escaped}` : escaped;
+        }).join('|');
+
+        const combinedRegex = new RegExp(pattern, 'gi');
+
+        // Count non-overlapping matches
+        const allMatches = textValue.match(combinedRegex) || [];
+        let foundCount = allMatches.length;
+
+        // Highlight matches in one pass
         let highlighted = escapeHtml(textValue);
-        let foundCount = 0;
-
-        RISKY_KEYWORDS.forEach(word => {
-            const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // Remove trailing \b to allow matching plurals (e.g., "gmails" matches "gmail")
-            const regexSource = /^[a-zA-Z0-9]/.test(word) ? `\\b${escapedWord}` : escapedWord;
-            const regex = new RegExp(regexSource, 'gi');
-
-            const matches = textValue.match(regex);
-            if (matches) foundCount += matches.length;
-
-            highlighted = highlighted.replace(regex, '##OPEN##$&##CLOSE##');
-        });
+        highlighted = highlighted.replace(combinedRegex, '##OPEN##$&##CLOSE##');
 
         const finalHtml = highlighted
             .split('##OPEN##').join('<span class="highlight">')
