@@ -73,6 +73,13 @@
     background: transparent;
 }
 
+.warning-highlight {
+    color: #b45309; /* Deep golden brown */
+    background: #fef3c7; /* Light yellow background */
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
 /* Controls and Stats */
 .controls {
     display: flex;
@@ -85,10 +92,10 @@
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap; /* Allow wrapping for many badges */
 }
 
-.risk-badge,
-.word-badge {
+.risk-badge, .warning-badge, .word-badge {
     font-size: 13px;
     font-weight: 700;
     padding: 6px 14px;
@@ -98,9 +105,14 @@
     transition: all 0.3s;
 }
 
-.risk-badge.warning {
+.risk-badge.active {
     background: #fff0f0;
     color: var(--danger);
+}
+
+.warning-badge.active {
+    background: #fef3c7;
+    color: #b45309;
 }
 
 .word-badge.warning {
