@@ -2,10 +2,18 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import './RiskScanner.css';
 
 const RISKY_KEYWORDS = [
-    "call", "phone number", "WhatsApp", "number", "Telegram", "email",
-    "payment", "@", "PayPal", "Payoneer", "bank transfer",
-    "direct payment", "payments", "gmail", "pay", "pay outside", "contact me directly", "Skype",
-    "facebook", "messenger", "Instagram", "linkedin", "marketplace", "bill", "account", "money", "meetings", "TikTok"
+    "PayPal", "Payoneer", "Wise", "Skrill", "Binance", "Stripe", "direct payment",
+    "send money", "transfer", "wire transfer", "invoice outside", "crypto",
+    "USDT", "Bitcoin", "WhatsApp", "Telegram", "Skype", "Zoom", "Google Meet",
+    "Facebook", "Messenger", "Instagram", "LinkedIn", "Discord", "Viber", "IMO",
+    "Email", "Gmail", "Yahoo", "number", "phone", "call", "meeting",
+    "Contact me outside", "text me", "bank account", "account number",
+    "routing number", "IBAN", "card number", "NID", "passport", "address",
+    "phone number", "personal email", "discuss elsewhere", "off platform",
+    "work outside Fiverr", "cheaper outside", "avoid commission", "% fee",
+    "direct deal", "long term outside", "@", "payment", "bank transfer",
+    "payments", "pay", "pay outside", "contact me", "contact me directly", "marketplace",
+    "bill", "account", "money", "meetings", "TikTok"
 ].sort((a, b) => b.length - a.length);
 
 const RiskScanner = () => {
@@ -81,6 +89,7 @@ const RiskScanner = () => {
         // Create a single regex for all keywords to avoid overlapping/double counting
         // Keywords are already sorted by length (descending) so longer ones match first
         const pattern = RISKY_KEYWORDS.map(word => {
+            if (word === "% fee") return `\\d*%\\s*fee`; // Match any number + % fee
             const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             return /^[a-zA-Z0-9]/.test(word) ? `\\b${escaped}` : escaped;
         }).join('|');
