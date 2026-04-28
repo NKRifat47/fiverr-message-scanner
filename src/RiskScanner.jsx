@@ -25,6 +25,7 @@ const RiskScanner = () => {
     const [charCount, setCharCount] = useState(0);
     const [riskCount, setRiskCount] = useState(0);
     const [warningCount, setWarningCount] = useState(0);
+    const [currentRiskIndex, setCurrentRiskIndex] = useState(-1);
 
     // Function to get caret position in characters
     const getCaretCharacterOffsetWithin = (element) => {
@@ -82,6 +83,31 @@ const RiskScanner = () => {
             .replace(/'/g, "&#039;");
     };
 
+    const scrollToRisk = (index) => {
+        if (index === -1 || !editorRef.current) return;
+        const riskElements = editorRef.current.querySelectorAll('.highlight');
+        if (riskElements[index]) {
+            // Remove active class from all
+            riskElements.forEach(el => el.classList.remove('active'));
+            // Add active class to current
+            riskElements[index].classList.add('active');
+            // Scroll
+            riskElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+
+    const handleNavigate = (direction) => {
+        if (riskCount === 0) return;
+        let newIndex;
+        if (direction === 'next') {
+            newIndex = (currentRiskIndex + 1) % riskCount;
+        } else {
+            newIndex = (currentRiskIndex - 1 + riskCount) % riskCount;
+        }
+        setCurrentRiskIndex(newIndex);
+        scrollToRisk(newIndex);
+    };
+
     const handleInput = () => {
         const el = editorRef.current;
         const textValue = el.innerText || "";
@@ -102,21 +128,39 @@ const RiskScanner = () => {
         }).join('|');
         const warningRegex = new RegExp(`(${warningPattern})`, 'gi');
 
-        // 3. Count matches
+        // 3. Count matches and update index
         const risks = textValue.match(riskRegex) || [];
         const warnings = textValue.match(warningRegex) || [];
+        
+        let newIndex = currentRiskIndex;
+        if (risks.length === 0) {
+            newIndex = -1;
+        } else if (newIndex >= risks.length) {
+            newIndex = risks.length - 1;
+        } else if (newIndex === -1 && risks.length > 0 && riskCount === 0) {
+            // Auto-focus on first risk if we went from 0 to some (typical for paste)
+            newIndex = 0;
+            setTimeout(() => scrollToRisk(0), 10);
+        }
 
         // 4. Highlight (Single Pass logic using markers to avoid nested interference)
         let processed = escapeHtml(textValue);
 
-        // Mark Risks first
-        processed = processed.replace(riskRegex, '##RISK_OPEN##$1##RISK_CLOSE##');
+        // Mark Risks first with index awareness for active highlight
+        let rIdx = 0;
+        processed = processed.replace(riskRegex, (match) => {
+            const isActive = rIdx === newIndex;
+            rIdx++;
+            return isActive ? `##RISK_ACTIVE_OPEN##${match}##RISK_CLOSE##` : `##RISK_OPEN##${match}##RISK_CLOSE##`;
+        });
+
         // Mark Warnings (only if not already inside a Risk tag)
         processed = processed.replace(warningRegex, (match) => {
             return `##WARN_OPEN##${match}##WARN_CLOSE##`;
         });
 
         const finalHtml = processed
+            .split('##RISK_ACTIVE_OPEN##').join('<span class="highlight active">')
             .split('##RISK_OPEN##').join('<span class="highlight">')
             .split('##RISK_CLOSE##').join('</span>')
             .split('##WARN_OPEN##').join('<span class="warning-highlight">')
@@ -131,6 +175,7 @@ const RiskScanner = () => {
         setWarningCount(warnings.length);
         setCharCount(textValue.length);
         setWordCount(textValue.trim() ? textValue.trim().split(/\s+/).length : 0);
+        setCurrentRiskIndex(newIndex);
     };
 
     const handleClear = () => {
@@ -140,6 +185,7 @@ const RiskScanner = () => {
             setWarningCount(0);
             setCharCount(0);
             setWordCount(0);
+            setCurrentRiskIndex(-1);
             editorRef.current.focus();
         }
     };
@@ -175,6 +221,27 @@ const RiskScanner = () => {
                 <div className="stats-group">
                     <div className={`risk-badge ${riskCount > 0 ? 'active' : ''}`}>
                         {riskCount} Potential {riskCount === 1 ? 'Risk' : 'Risks'}
+                        {riskCount > 0 && (
+                            <div className="risk-nav">
+                                <span className="risk-counter">
+                                    {currentRiskIndex + 1}/{riskCount}
+                                </span>
+                                <button
+                                    className="btn-nav"
+                                    onClick={() => handleNavigate('prev')}
+                                    title="Previous Risk"
+                                >
+                                    ↑
+                                </button>
+                                <button
+                                    className="btn-nav"
+                                    onClick={() => handleNavigate('next')}
+                                    title="Next Risk"
+                                >
+                                    ↓
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <div className={`warning-badge ${warningCount > 0 ? 'active' : ''}`}>
                         {warningCount} {warningCount === 1 ? 'Warning' : 'Warnings'}
