@@ -4,14 +4,14 @@ import './RiskScanner.css';
 const CRITICAL_RISKS = [
     "PayPal", "Payoneer", "Wise", "Skrill", "Binance", "Stripe", "direct payment",
     "send money", "transfer", "wire transfer", "invoice outside", "crypto",
-    "USDT", "Bitcoin", "WhatsApp", "Telegram", "Skype", "Zoom", "Google Meet",
+    "USDT", "Bitcoin", "WhatsApp", "Telegram", "Skype", "Google Meet",
     "Facebook", "Messenger", "Instagram", "LinkedIn", "Discord", "Viber", "IMO",
     "Email", "Gmail", "Yahoo", "number", "phone", "call", "meeting",
     "Contact me outside", "text me", "bank account", "account number",
     "routing number", "IBAN", "card number", "NID", "passport", "address",
     "phone number", "personal email", "@", "payment", "bank transfer",
     "payments", "pay", "pay outside", "contact me", "contact me directly",
-    "marketplace", "bill", "account", "money", "meetings", "TikTok", "Slack", "% fee"
+    "marketplace", "bill", "money", "meetings", "TikTok", "Slack", "% fee"
 ].sort((a, b) => b.length - a.length);
 
 const WARNING_WORDS = [
