@@ -11,7 +11,7 @@ const CRITICAL_RISKS = [
     "routing number", "IBAN", "card number", "NID", "passport", "address",
     "phone number", "personal email", "@", "payment", "bank transfer",
     "payments", "pay", "pay outside", "contact me", "contact me directly",
-    "marketplace", "bill", "money", "meetings", "TikTok", "Slack", "% fee"
+    "marketplace", "bill", "money", "meetings", "TikTok", "Slack", "% fee", "paid", "outlook"
 ].sort((a, b) => b.length - a.length);
 
 const WARNING_WORDS = [
