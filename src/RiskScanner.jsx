@@ -50,6 +50,7 @@ const CRITICAL_RISKS = [
   "@",
   "payment",
   "bank transfer",
+  "social media",
   "payments",
   "pay",
   "pay outside",
